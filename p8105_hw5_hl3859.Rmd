@@ -25,5 +25,13 @@ simulate_probs = function(trials = 10000, max_size = 50) {
 }
 
 probs = simulate_probs()
+
+group_sizes = 2:50
+plot(group_sizes, probs, type = "b", 
+     xlab = "Group Size (n)", 
+     ylab = "Probability of Shared Birthday",
+     main = "Probability of at Least Two People Sharing a Birthday",
+     pch = 16, col = "blue")
+abline(h = 0.5, col = "red", lty = 2)
 ```
 
