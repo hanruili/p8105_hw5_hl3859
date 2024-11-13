@@ -35,3 +35,28 @@ plot(group_sizes, probs, type = "b",
 abline(h = 0.5, col = "red", lty = 2)
 ```
 
+The probability of shared birthdays increases as the group size increases. The probability reaches around 0.5 when the group size is about 23. By the time the group size reaches 50, the probability of a shared birthday is close to 1, meaning it's almost certain that at least two people will share a birthday in such a group.
+
+# Problem 2
+
+```{r message=FALSE}
+library(dplyr)
+library(broom)
+library(ggplot2)
+```
+
+```{r}
+n = 30
+sigma = 5
+alpha = 0.05
+mu_values = 0:6
+num_simulations = 5000
+```
+
+
+
+
+
+
+
+
