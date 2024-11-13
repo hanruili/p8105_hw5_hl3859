@@ -1,0 +1,16 @@
+---
+title: "p8105_hw5_hl3859"
+author: "Hanrui Li"
+date: "2024-11-13"
+output: github_document
+---
+
+# Problem 1
+
+```{r}
+has_duplicate = function(n) {
+  bdays = sample(1:365, n, replace = TRUE) 
+  return(any(duplicated(bdays))) 
+}
+```
+
