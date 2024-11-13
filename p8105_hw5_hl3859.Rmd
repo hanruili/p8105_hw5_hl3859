@@ -12,5 +12,16 @@ has_duplicate = function(n) {
   bdays = sample(1:365, n, replace = TRUE) 
   return(any(duplicated(bdays))) 
 }
+
+simulate_probs <- function(trials = 10000, max_size = 50) {
+  probs <- numeric(max_size - 1)
+  
+  for (n in 2:max_size) {
+    dup_count <- sum(replicate(trials, has_duplicate(n)))
+    probs[n - 1] <- dup_count / trials
+  }
+  
+  return(probs)
+}
 ```
 
