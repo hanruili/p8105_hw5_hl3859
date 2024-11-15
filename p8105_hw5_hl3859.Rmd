@@ -51,9 +51,124 @@ sigma = 5
 alpha = 0.05
 mu_values = 0:6
 num_simulations = 5000
+
+results <- data.frame(mu = numeric(), estimate = numeric(), p_value = numeric())
+
+set.seed(1)
+
+for (mu in mu_values) {
+  for (i in 1:num_simulations) {
+
+    sample <- rnorm(n, mean = mu, sd = sigma)
+    
+    t_test <- t.test(sample, mu = 0)
+    test_summary <- tidy(t_test)
+    
+    results <- rbind(
+      results, data.frame(mu = mu, estimate = test_summary$estimate, p_value = test_summary$p.value))
+  }
+}
+
+power_data =
+  results |>
+  group_by(mu) |>
+  summarize(power = mean(p_value < alpha))
+
+power_data |>
+  ggplot(aes(x = mu, y = power)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Power vs. Effect Size", x = expression(mu), y = "Power") +
+  theme_minimal()
+
+
+```
+
+The association between effect size and power is positive and nonlinear. As the effect size grows, the power of the test improves, but beyond a certain point, additional increases in effect size have a diminishing impact on power. 
+
+```{r}
+average_mu_data =
+  results |>
+  group_by(mu) |>
+  summarize(average_estimate = mean(estimate))
+
+rejected_mu_data =
+  results |>
+  filter(p_value < alpha) |>
+  group_by(mu) |>
+  summarize(rejected_average_estimate = mean(estimate))
+
+ggplot() +
+  geom_line(data = average_mu_data, aes(x = mu, y = average_estimate), color = "blue") +
+  geom_point(data = average_mu_data, aes(x = mu, y = average_estimate), color = "blue") +
+  geom_line(data = rejected_mu_data, aes(x = mu, y = rejected_average_estimate), color = "red") +
+  geom_point(data = rejected_mu_data, aes(x = mu, y = rejected_average_estimate), color = "red") +
+  labs(title = "Average Estimate of Mu vs. True Mu",
+       x = expression(mu),
+       y = "Average Estimate of Mu",
+       caption = "Blue: All Samples, Red: Null Rejected Samples") +
+  theme_minimal()
 ```
 
 
+the sample average of $\hat{\mu}$ across tests where the null is rejected does not approximate the true value of $\mu$ well at lower effect sizes. The red line provides a biased estimate of $\mu$ at lower values. This is because when the null hypothesis is rejected, it often indicates that the sample mean was sufficiently far from zero (the null value), thus creating a selection bias. This bias causes the average $\hat{\mu}$ in the rejected samples to overestimate the true $\mu$, especially when $\mu$ is small. 
+
+However, as $\mu$ increases, the effect size becomes large enough that most tests reject the null hypothesis, reducing this selection bias. This is why, at higher $\mu$ values, the red line closely approximates the true $\mu$.
+
+
+# Problem 3
+
+```{r}
+library(tidyverse)
+
+homicide = 
+  read.csv("homicide-data.csv") |>
+  mutate(city_state = paste(city, state, sep = ", "))
+
+homicide_summary = 
+  homicide |>
+  group_by(city_state) |>
+  summarise(
+    total_homicides = n(),
+    unsolved_homicides = sum(disposition %in% c("Closed without arrest", "Open/No arrest"))
+  )
+
+homicide_summary
+```
+
+```{r}
+prop.test(
+  homicide_summary |> 
+    filter(city_state == "Baltimore, MD") |> 
+    pull(unsolved_homicides), 
+  homicide_summary |> 
+    filter(city_state == "Baltimore, MD") |> 
+    pull(total_homicides)) |>
+  broom::tidy()
+```
+
+```{r}
+results = homicide_summary |>
+  mutate(
+    prop_test = purrr::map2(unsolved_homicides, total_homicides, ~ prop.test(.x, .y)),
+    tidy_results = purrr::map(prop_test, ~broom::tidy(.x))) |>
+  unnest(tidy_results) |>
+  select(city_state, estimate, conf.low, conf.high)
+
+results
+```
+
+```{r}
+results |>
+  ggplot(aes(x = reorder(city_state, estimate), y = estimate)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high)) +
+  labs(
+    x = "City",
+    y = "Proportion of Unsolved Homicides",
+    title = "Proportion of Unsolved Homicides with 95% Confidence Intervals") + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+```
 
 
 
